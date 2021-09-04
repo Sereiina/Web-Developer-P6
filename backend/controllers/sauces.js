@@ -70,25 +70,70 @@ exports.getAllSauces = async (req, res, next) => {
   }
 };
 
-exports.likeSauce = async (req, res, next) => {
+// exports.likeSauce = async (req, res, next) => {
 
-  // { userId: String, like: Number }
-  if (req.body.like == 1) {
-    console.log('like');
-    await Sauces.findByIdAndUpdate(
-      req.params.id, 
-      {$addToSet: {usersLiked: req.body.userId }, {$inc: {likes: 1}}}
-    );
-
-  } else if (req.body.like == 0) {
-    console.log('N/A');
-  } else if (req.body.like == -1) {
-    console.log('dislike');
-  } else {
-    console.log('400');
-  }
+//   // { userId: String, like: Number }
+//   if (req.body.like == 1) {
+//     console.log('like');
+//     await Sauces.findByIdAndUpdate(
+//       req.params.id, 
+//        {$addToSet: {usersLiked: req.body.userId }, {$inc: {likes: 1}}}
+//     );
+//   } else if (req.body.like == 0) {
+//     console.log('N/A');
+//   } else if (req.body.like == -1) {
+//     console.log('dislike');
+//   } else {
+//     console.log('400');
+//   }
   
-res.status(200).json({message: 'test'});
+// res.status(200).json({message: 'OK'});
+
+// };
+
+
+
+
+
+exports.likeSauce = async (req, res, next) => {
+  try {
+    // if the user likes
+    if (req.body.like == 1) {
+      // add the user to the usersLiked array
+      await Sauces.findByIdAndUpdate(req.params.id, {$addToSet: {usersLiked: req.body.userId }});
+      // add 1 to the likes
+      await Sauces.findByIdAndUpdate(req.params.id, {$inc: {likes: 1}});
+    }
+    // else, if the user dislikes
+    else if (req.body.like == -1) {
+      // add the user to the usersDislike array
+      await Sauces.findByIdAndUpdate(req.params.id, {$addToSet: {usersDisliked: req.body.userId }});
+      // add 1 to the dislikes
+      await Sauces.findByIdAndUpdate(req.params.id, {$inc: {dislikes: 1}});
+    }
+    else if (req.body.like == 0) {
+      // get the sauce data before the update, and remove the user from the like/dislike arrays
+      const sauceData = await Sauces.findByIdAndUpdate(req.params.id, {$pull: {usersLiked: req.body.userId, usersDisliked: req.body.userId}});
+      // if the user removed a like, remove 1 from the likes
+      if (sauceData.usersLiked.includes(req.body.userId)) {
+        await Sauces.findByIdAndUpdate(req.params.id, {$inc: {likes: -1}});
+      }
+      // if the user removed a dislike, remove 1 from the dislikes
+      if (sauceData.usersDisliked.includes(req.body.userId)) {
+        await Sauces.findByIdAndUpdate(req.params.id, {$inc: {dislikes: -1}});
+      }
+    }
+    // else, the value provided is wrong, return 400
+    else {
+      res.status(400).json({ message: 'Expected a value in the range -1, 1' });
+    }
+  }
+  // if there's an error, return 500
+  catch (error) {
+    res.status(500).json({ error });
+  }
+  //finally, respond with 200
+  res.status(200).json({message: 'OK'});
 
 };
 
