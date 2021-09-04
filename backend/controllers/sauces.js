@@ -1,6 +1,5 @@
 const Sauces = require ('../models/sauces');
 const fs = require('fs');
-const { log } = require('console');
 
 
 exports.createSauces = async (req, res, next) => {
@@ -9,8 +8,10 @@ exports.createSauces = async (req, res, next) => {
     const sauce = new Sauces({
       ...sauceObject,
       imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`,
-      usersLiked: 0,
-      usersDisliked: 0
+      likes: 0,
+      dislikes: 0,
+      usersLiked: [],
+      usersDisliked: []
     });
     try {
       await sauce.save();
@@ -19,7 +20,7 @@ exports.createSauces = async (req, res, next) => {
       res.status(400).json({ error })
     }
   };
-  
+
 exports.modifySauces = async (req, res, next) => {
   const updateSauces = Sauces.updateOne(
       { _id: req.params.id}, {...req.body, _id: req.params.id }
@@ -50,7 +51,7 @@ exports.deleteSauces = async (req, res, next) => {
   });
 };
 
-exports.getOneSauces = async (req, res, next) => {
+exports.getOneSauce = async (req, res, next) => {
     const OneSauce = Sauces.findOne( { _id: req.params.id})
     try { 
       sauce = await OneSauce;
@@ -69,30 +70,25 @@ exports.getAllSauces = async (req, res, next) => {
   }
 };
 
-exports.likeSauce = (req, res, next) => {
-  //const req body user+like
-  // nouveau model des nouvelles valeurs 
-  // method findOne
-  // boucle switch (voir ci dessous)
-  // uptadeOne pour enregistré les changement?
+exports.likeSauce = async (req, res, next) => {
 
-    // switch (like) {
-    //   case 1:  // CAS: sauce liked
-    //     newValues.usersLiked.push(userId);
-    // break;
-    //   case -1:  // CAS: sauce disliked
-    //     newValues.usersDisliked.push(userId);
-    // break;
-    //   case 0:  // CAS: Annulation du like/dislike
-    //     if (newValues.usersLiked.includes(userId)) {
-    //     // si on annule le like
-    //       const index = newValues.usersLiked.indexOf(userId);
-    //       newValues.usersLiked.splice(index, 1);
-    //     } else {
-    //     // si on annule le dislike
-    //       const index = newValues.usersDisliked.indexOf(userId);
-    //       newValues.usersDisliked.splice(index, 1);
-    //     }
-    // break;
+  // { userId: String, like: Number }
+  if (req.body.like == 1) {
+    console.log('like');
+    await Sauces.findByIdAndUpdate(
+      req.params.id, 
+      {$addToSet: {usersLiked: req.body.userId }, {$inc: {likes: 1}}}
+    );
+
+  } else if (req.body.like == 0) {
+    console.log('N/A');
+  } else if (req.body.like == -1) {
+    console.log('dislike');
+  } else {
+    console.log('400');
+  }
+  
+res.status(200).json({message: 'test'});
+
 };
-     
+
