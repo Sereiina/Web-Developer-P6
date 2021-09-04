@@ -22,16 +22,26 @@ exports.createSauces = async (req, res, next) => {
   };
 
 exports.modifySauces = async (req, res, next) => {
-  const updateSauces = Sauces.updateOne(
-      { _id: req.params.id}, {...req.body, _id: req.params.id }
-    );
-    try {
-      await updateSauces;
-      res.status(201).json({ message: 'Objet modifié !'});
-    } catch (error) {
-      res.status(400).json({ error });
-    }
-  };
+  
+  // const currentSauce = await Sauces.findById(req.params.id);
+
+  // if (req.body.userId != currentSauce.userId) {
+  //   return res.status(403).json({ error });
+  // }
+  
+  try {
+    const sauceObject = req.file ?
+    {
+      ...JSON.parse(req.body.sauce),
+      imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+    } : {...req.body};
+
+    await Sauces.updateOne( { _id: req.params.id}, {...sauceObject, _id: req.params.id });
+    res.status(201).json({ message: 'Objet modifié !'});
+  } catch (error) {
+    res.status(400).json({ error });
+  }
+};
 
 exports.deleteSauces = async (req, res, next) => {
   let oneSauce = null;
@@ -69,30 +79,6 @@ exports.getAllSauces = async (req, res, next) => {
     res.status(400).json({ error });
   }
 };
-
-// exports.likeSauce = async (req, res, next) => {
-
-//   // { userId: String, like: Number }
-//   if (req.body.like == 1) {
-//     console.log('like');
-//     await Sauces.findByIdAndUpdate(
-//       req.params.id, 
-//        {$addToSet: {usersLiked: req.body.userId }, {$inc: {likes: 1}}}
-//     );
-//   } else if (req.body.like == 0) {
-//     console.log('N/A');
-//   } else if (req.body.like == -1) {
-//     console.log('dislike');
-//   } else {
-//     console.log('400');
-//   }
-  
-// res.status(200).json({message: 'OK'});
-
-// };
-
-
-
 
 
 exports.likeSauce = async (req, res, next) => {
