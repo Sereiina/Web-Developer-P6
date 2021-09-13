@@ -32,11 +32,12 @@ les différents packages utilisés sont :
 Pour lancer et démarrer le projet :
 
 - Dans le dossier Backend :
-  - copier le fichier .env.example vers .env
-  - renseigner les différentes valeurs dans le fichier .env créé
-  - npm install
-  - nodemon server
+  - se déplacer dans le dossier avec `cd backend`
+  - copier le fichier `.env.example` vers `.env`
+  - renseigner les différentes valeurs dans le fichier `.env` créé
+  - installer les dépendances avec : `npm install`
+  - lancer le serveur avec : `nodemon server`
 - Dans le dossier Frontend :
-  - npm install
-  - npm start
-  
+  - se déplacer dans le dossier avec : `cd ../frontend`
+  - installer les dépendances avec : `npm install`
+  - lancer le serveur avec : `npm start`
