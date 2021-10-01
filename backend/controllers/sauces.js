@@ -1,9 +1,12 @@
 const Sauces = require ('../models/sauces');
 const fs = require('fs');
+const sanitize = require('mongo-sanitize');
 
 
-exports.createSauces = async (req, res, next) => {
-    const sauceObject = JSON.parse(req.body.sauce);
+exports.createSauces = async ( req, res, next) => {
+  
+    const clean_sauce = sanitize(req.body.sauce);
+    const sauceObject = JSON.parse(clean_sauce);
     delete sauceObject._id;
     const sauce = new Sauces({
       ...sauceObject,
@@ -13,34 +16,31 @@ exports.createSauces = async (req, res, next) => {
       usersLiked: [],
       usersDisliked: []
     });
-    try {
-      await sauce.save();
-      res.status(201).json({ message: 'Sauce enregistré !'});
-    } catch (error) {
-      res.status(400).json({ error })
-    }
-  };
+    
+      try {
+        await sauce.save();
+        res.status(201).json({ message: 'Sauce enregistré !'});
+      } catch (error) {
+        res.status(400).json({ error })
+      }
+};
 
 exports.modifySauces = async (req, res, next) => {
+  const clean_sauce = sanitize(req.body.sauce);
+    try { 
+      const sauceObject = req.file ?
+      {
+        ...JSON.parse(clean_sauce),
+        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+      } : {...req.body};
+      
   
-  // const currentSauce = await Sauces.findById(req.params.id);
-
-  // if (req.body.userId != currentSauce.userId) {
-  //   return res.status(403).json({ error });
-  // }
-  
-  try {
-    const sauceObject = req.file ?
-    {
-      ...JSON.parse(req.body.sauce),
-      imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
-    } : {...req.body};
-
-    await Sauces.updateOne( { _id: req.params.id}, {...sauceObject, _id: req.params.id });
-    res.status(201).json({ message: 'Objet modifié !'});
-  } catch (error) {
-    res.status(400).json({ error });
-  }
+      await Sauces.updateOne( { _id: req.params.id}, {...sauceObject, _id: req.params.id });
+      res.status(201).json({ message: 'Objet modifié !'});
+    } catch (error) {
+      res.status(400).json({ error });
+    }
+ 
 };
 
 exports.deleteSauces = async (req, res, next) => {
@@ -73,13 +73,13 @@ exports.getOneSauce = async (req, res, next) => {
 
 exports.getAllSauces = async (req, res, next) => {
   try {
-    const allSauces = await Sauces.find()
+    const allSauces = await Sauces.find();
     res.status(200).json(allSauces);
   } catch (error) {
     res.status(400).json({ error });
   }
 };
-
+ 
 
 exports.likeSauce = async (req, res, next) => {
   try {
