@@ -1,9 +1,11 @@
 const bcrypt = require ('bcrypt');
 const jwt = require('jsonwebtoken');
 const sanitize = require('mongo-sanitize');
-
+const fs = require('fs');
 const UserModel = require ('../models/user');
 const Sauces = require ('../models/sauces');
+
+
 
 
 exports.signup = async (req, res, next) => {
@@ -66,10 +68,10 @@ UserModel.findOne({email: clean_email, password: clean_password }, async functio
 
 exports.profil = async (req,res,next) => {
     try {
-        const profilUser = await UserModel.find({_id: req.params.id}, '-password');
-        const profilSauces = await Sauces.find({userId: req.params.id});
-        const profilLikes = await Sauces.find({usersLiked: req.params.id});
-        const profilDislike = await Sauces.find({usersDisliked: req.params.id});
+        const profilUser = await UserModel.find({_id: req.params.id}, '-password ');
+        const profilSauces = await Sauces.find({userId: req.params.id}, '-usersLiked -usersDisliked');
+        const profilLikes = await Sauces.find({usersLiked: req.params.id}, '-usersLiked -usersDisliked');
+        const profilDislike = await Sauces.find({usersDisliked: req.params.id}, '-usersLiked -usersDisliked');
         const response = {
             'User' : profilUser[0],
             'Sauces' : profilSauces,
@@ -82,4 +84,39 @@ exports.profil = async (req,res,next) => {
         res.status(400).json({error});
     }
 
+}
+
+exports.deleteProfil = async (req,res,next) => {
+    
+    try {
+        await Sauces.updateOne({usersLiked: req.params.id}, {$inc: {likes: -1}});
+        console.log("like supp");
+    } catch (error) {
+        res.status(400).json({error});
+    }
+    
+    try {
+        await Sauces.updateOne({usersDisliked: req.params.id}, {$inc: {dislikes: -1}});
+        console.log("dislike supp");
+    } catch (error) {
+        res.status(400).json({error});
+    }
+
+
+    
+
+
+    try {
+        await Sauces.deleteOne({userId: req.params.id})
+        console.log("sauces supp");
+    } catch (error) {
+        res.status(400).json({error});
+    }
+
+    try {
+     await UserModel.deleteOne({_id: req.params.id});
+     console.log("compte supp");
+    } catch (error) {
+     res.status(400).json({error});
+    }
 }
