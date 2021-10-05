@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+
 const auth = require('../middleware/auth');
 const userCtrl = require('../controllers/user');
 
@@ -7,5 +8,5 @@ router.post('/signup', userCtrl.signup);
 router.post('/login', userCtrl.login);
 router.get('/profil/:id', auth, userCtrl.profil);
 
-router.delete('/profil/delete/:id', auth, userCtrl.deleteProfil);
+router.delete('/profil/:id', auth, userCtrl.deleteProfil);
 module.exports = router; 

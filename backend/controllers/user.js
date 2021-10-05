@@ -9,18 +9,28 @@ const Sauces = require ('../models/sauces');
 
 
 exports.signup = async (req, res, next) => {
-    
+
+    function isPasswordValid(password) {
+        const paswordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$/;
+        return paswordRegex.test(String(password))
+    }
     function isEmailValid(email) {
-        const EmailReg = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-        return EmailReg.test(String(email).toLowerCase());
+        const emailReg = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+        return emailReg.test(String(email).toLowerCase());
     };
 
     let hash = null;
-    try {
-        hash = await bcrypt.hash(req.body.password, 10)
-    } catch (error) {
-        return res.status(500).json({ error });
+    if (isPasswordValid(req.body.password)){
+        try {
+            hash = await bcrypt.hash(req.body.password, 10)
+        } catch (error) {
+            return res.status(500).json({ error });
+        }
     }
+    else {
+        return res.status(400).json("mdp is invalid");
+    }
+
     const user = new UserModel({email: req.body.email, password: hash});
     const clean_email = sanitize(req.body.email);
     const clean_password = sanitize(req.body.password);
@@ -105,7 +115,7 @@ exports.deleteProfil = async (req,res,next) => {
     }
 
     try {
-        await Sauces.deleteOne({userId: req.params.id});
+        await Sauces.deleteMany({userId: req.params.id});
         console.log("sauces supp");
     } catch (error) {
         res.status(400).json({error});
