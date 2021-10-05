@@ -89,25 +89,23 @@ exports.profil = async (req,res,next) => {
 exports.deleteProfil = async (req,res,next) => {
     
     try {
-        await Sauces.updateOne({usersLiked: req.params.id}, {$inc: {likes: -1}});
+        await Sauces.updateMany({usersLiked: req.params.id}, {$inc: {likes: -1}});
+        await Sauces.updateMany({usersLiked: req.params.id}, { $pull: {usersLiked: req.params.id}});
         console.log("like supp");
     } catch (error) {
         res.status(400).json({error});
     }
     
     try {
-        await Sauces.updateOne({usersDisliked: req.params.id}, {$inc: {dislikes: -1}});
+        await Sauces.updateMany({usersDisliked: req.params.id}, {$inc: {dislikes: -1}});
+        await Sauces.updateMany({usersDisliked: req.params.id}, { $pull: {usersDisliked: req.params.id}});
         console.log("dislike supp");
     } catch (error) {
         res.status(400).json({error});
     }
 
-
-    
-
-
     try {
-        await Sauces.deleteOne({userId: req.params.id})
+        await Sauces.deleteOne({userId: req.params.id});
         console.log("sauces supp");
     } catch (error) {
         res.status(400).json({error});
@@ -119,4 +117,6 @@ exports.deleteProfil = async (req,res,next) => {
     } catch (error) {
      res.status(400).json({error});
     }
+    res.status(200).json({message: 'informations supprimer'});
+    console.log('info supp !');
 }
