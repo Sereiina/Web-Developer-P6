@@ -77,11 +77,12 @@ UserModel.findOne({email: clean_email, password: clean_password }, async functio
 }
 
 exports.profil = async (req,res,next) => {
+
     try {
-        const profilUser = await UserModel.find({_id: req.params.id}, '-password ');
-        const profilSauces = await Sauces.find({userId: req.params.id}, '-usersLiked -usersDisliked');
-        const profilLikes = await Sauces.find({usersLiked: req.params.id}, '-usersLiked -usersDisliked');
-        const profilDislike = await Sauces.find({usersDisliked: req.params.id}, '-usersLiked -usersDisliked');
+        const profilUser = await UserModel.find({_id: req.userId}, '-password');
+        const profilSauces = await Sauces.find({userId: req.userId}, '-usersLiked -usersDisliked');
+        const profilLikes = await Sauces.find({usersLiked: req.userId}, '-userId -usersLiked -usersDisliked');
+        const profilDislike = await Sauces.find({usersDisliked: req.userId}, '-userId -usersLiked -usersDisliked');
         const response = {
             'User' : profilUser[0],
             'Sauces' : profilSauces,
@@ -99,30 +100,30 @@ exports.profil = async (req,res,next) => {
 exports.deleteProfil = async (req,res,next) => {
     
     try {
-        await Sauces.updateMany({usersLiked: req.params.id}, {$inc: {likes: -1}});
-        await Sauces.updateMany({usersLiked: req.params.id}, { $pull: {usersLiked: req.params.id}});
+        await Sauces.updateMany({usersLiked: req.userId}, {$inc: {likes: -1}});
+        await Sauces.updateMany({usersLiked: req.userId}, { $pull: {usersLiked: req.userId}});
         console.log("like supp");
     } catch (error) {
         res.status(400).json({error});
     }
     
     try {
-        await Sauces.updateMany({usersDisliked: req.params.id}, {$inc: {dislikes: -1}});
-        await Sauces.updateMany({usersDisliked: req.params.id}, { $pull: {usersDisliked: req.params.id}});
+        await Sauces.updateMany({usersDisliked: req.userId}, {$inc: {dislikes: -1}});
+        await Sauces.updateMany({usersDisliked: req.userId}, { $pull: {usersDisliked: req.userId}});
         console.log("dislike supp");
     } catch (error) {
         res.status(400).json({error});
     }
 
     try {
-        await Sauces.deleteMany({userId: req.params.id});
+        await Sauces.deleteMany({userId: req.userId});
         console.log("sauces supp");
     } catch (error) {
         res.status(400).json({error});
     }
 
     try {
-     await UserModel.deleteOne({_id: req.params.id});
+     await UserModel.deleteOne({_id: req.userId});
      console.log("compte supp");
     } catch (error) {
      res.status(400).json({error});
