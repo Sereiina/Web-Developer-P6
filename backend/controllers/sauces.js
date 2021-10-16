@@ -32,9 +32,21 @@ exports.createSauces = async ( req, res, next) => {
 
 exports.modifySauces = async (req, res, next) => {
 
-  const clean_sauce = sanitize(req.body.sauce);
 
-  if (req.userId !== clean_sauce.userId) {
+  const clean_sauce = sanitize(req.body.sauce);
+  let sauce = null;
+  
+  try {
+    sauce = await Sauces.findById(req.params.sauceId);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+
+  if (sauce == null) {
+    res.status(400).json({message : "Requested sauce does not exist"});
+  }
+  
+  if (req.userId !== sauce.userId) {
     return res.status(401).json({error: new Error('Invalid request!')});
   }
 
@@ -57,9 +69,12 @@ exports.modifySauces = async (req, res, next) => {
 exports.deleteSauces = async (req, res, next) => {
   let oneSauce = null;
   try {
-    oneSauce = await Sauces.findOne({ _id: req.params.sauceId });
+    oneSauce = await Sauces.findById(req.params.sauceId);
   } catch (error) {
     res.status(500).json({ error });
+  }
+  if (oneSauce == null) {
+    res.status(400).json({message : "Requested sauce does not exist"});
   }
 
   if (req.userId !== oneSauce.userId) {
@@ -72,7 +87,7 @@ exports.deleteSauces = async (req, res, next) => {
       await Sauces.deleteOne({ _id: req.params.sauceId });
       res.status(200).json({ message: 'Objet supprimé !'});
     } catch (error) {
-      res.status(400).json({ error });
+      return res.status(400).json({ error });
     }
   });
 };
@@ -102,15 +117,18 @@ exports.likeSauce = async (req, res, next) => {
   if (req.userId !== req.body.userId) {
     return res.status(401).json({error: new Error('Invalid request!')});
   }
+
+  if (req.body.like == 1 || req.body.like == -1) {
+    const sauce = await Sauces.findById(req.params.sauceId)
+    // If the user is already in the likes or dislikes array, return a 400
+    if (sauce.usersLiked.includes(req.body.userId) || sauce.usersDisliked.includes(req.body.userId)) {
+      return res.status(400).json({message: 'Bad !'}); 
+    }    
+  }
   
   try {
-    const sauce = await Sauces.findById(req.params.sauceId)
     // if the user likes
     if (req.body.like == 1) {
-      // If the user is already in the likes array, return a 400
-      if (sauce.usersLiked.includes(req.body.userId)) {
-        return res.status(400).json({message: 'Bad !'}); 
-      }
       // add the user to the usersLiked array
       await Sauces.findByIdAndUpdate(req.params.sauceId, {$addToSet: {usersLiked: req.body.userId }});
       // add 1 to the likes
@@ -118,10 +136,6 @@ exports.likeSauce = async (req, res, next) => {
     }
     // else, if the user dislikes
     else if (req.body.like == -1) {
-      // If the user is already in the dislikes array, return a 400
-      if (sauce.usersDisliked.includes(req.body.userId)) {
-        return res.status(400).json({message: 'Bad !'}); 
-      }
       // add the user to the usersDislike array
       await Sauces.findByIdAndUpdate(req.params.sauceId, {$addToSet: {usersDisliked: req.body.userId }});
       // add 1 to the dislikes
