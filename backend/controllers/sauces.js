@@ -122,7 +122,7 @@ exports.likeSauce = async (req, res, next) => {
     const sauce = await Sauces.findById(req.params.sauceId)
     // If the user is already in the likes or dislikes array, return a 400
     if (sauce.usersLiked.includes(req.body.userId) || sauce.usersDisliked.includes(req.body.userId)) {
-      return res.status(400).json({message: 'Bad !'}); 
+      return res.status(400).json({message: 'sauce already liked or disliked !'}); 
     }    
   }
   
